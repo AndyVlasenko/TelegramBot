@@ -1,0 +1,11 @@
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    registered_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    version INTEGER NOT NULL DEFAULT 0,
+    deleted_at TIMESTAMP,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    email VARCHAR(255) NOT NULL
+);
