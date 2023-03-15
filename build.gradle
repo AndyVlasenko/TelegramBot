@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.github.andyvlasenko'
-version = '0.0.1-SNAPSHOT'
+version = '0.1.0-SNAPSHOT'
 sourceCompatibility = '17'
 
 configurations {
@@ -17,6 +17,14 @@ configurations {
 repositories {
 	mavenCentral()
 }
+//TODO log4j version
+ext {
+	// Define the versions here
+	gradleVersion = '8.0'
+	telegramVersion = '6.5.0'
+	log4jVersion = '2.20.0'
+}
+
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -25,10 +33,14 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation group: 'org.telegram', name: 'telegrambots-spring-boot-starter', version: "${telegramVersion}"
+	implementation 'org.apache.logging.log4j:log4j-api-test:2.20.0'
+	implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+
 }
 
 wrapper {
-	gradleVersion = '8.0'
+	gradleVersion = "${gradleVersion}"
 }
 
 tasks.named('test') {
