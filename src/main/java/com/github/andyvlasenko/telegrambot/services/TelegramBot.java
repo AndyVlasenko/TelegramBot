@@ -1,11 +1,9 @@
 package com.github.andyvlasenko.telegrambot.services;
 
-import com.github.andyvlasenko.telegrambot.TelegramBotApplication;
 import com.github.andyvlasenko.telegrambot.config.BotConfig;
 import lombok.extern.log4j.Log4j;
 import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -14,7 +12,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 //TODO Move to WebHook
 @Component
-@Log4j2
+@Slf4j
 public class TelegramBot extends TelegramLongPollingBot {
     final BotConfig botConfig;
 
@@ -37,23 +35,30 @@ public class TelegramBot extends TelegramLongPollingBot {
             String originalMessage = update.getMessage().getText().trim();
             String chatId = update.getMessage().getChatId().toString();
 
-            SendMessage response = new SendMessage();
-            response.setChatId(chatId);
-            response.setText(String.format("You sent: %s", originalMessage));
-            sendAnswerMessage(response);
+            switch (originalMessage) {
+                case "/start":
+                    startProcessMessage(chatId, update.getMessage().getChat().getFirstName());
+                    break;
+                default:
+                    sendMessage(chatId, "Sorry command was not recognised"); //TODO make it constant
+            }
         }
     }
 
-    public void sendAnswerMessage (SendMessage message) {
-        if(message != null) {
-            try {
-                execute(message);
-                //TODO remove sout and log
-                System.out.println(message.getText());
-                log.debug(message.getText());
-            } catch (TelegramApiException telegramApiException) {
-                log.error(telegramApiException);
-            }
+    private void startProcessMessage(String chatId, String firstName) {
+        String answer = String.format("Hi, %s, nice to meet you", firstName);
+        sendMessage(chatId, answer);
+    }
+
+    public void sendMessage(String chatId, String message) {
+        SendMessage response = new SendMessage();
+        response.setChatId(chatId);
+        response.setText(message);
+
+        try {
+            execute(response);
+        } catch (TelegramApiException executeException) {
+            log.error("Error appeared: " + executeException.getMessage());
         }
     }
 }

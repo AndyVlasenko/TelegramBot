@@ -11,6 +11,6 @@ import org.springframework.context.annotation.PropertySource;
 public class BotConfig {
     @Value("${bot.name}")
     String botName;
-    @Value("${bot.token}")
-    String botToken;
+    //@Value("${bot.token}")
+    String botToken = System.getenv("BOT_TOKEN");
 }
