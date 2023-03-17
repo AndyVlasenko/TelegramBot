@@ -1,8 +1,8 @@
-package com.github.andyvlasenko.telegrambot.services;
+package com.github.andyvlasenko.telegrambot.bot;
 
+import com.github.andyvlasenko.telegrambot.command.CommandContainer;
 import com.github.andyvlasenko.telegrambot.config.BotConfig;
-import lombok.extern.log4j.Log4j;
-import lombok.extern.log4j.Log4j2;
+import com.github.andyvlasenko.telegrambot.services.impl.SendMessageServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -10,14 +10,20 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import static com.github.andyvlasenko.telegrambot.command.CommandName.NO;
+
 //TODO Move to WebHook
 @Component
 @Slf4j
 public class TelegramBot extends TelegramLongPollingBot {
+    public static String COMMAND_PREFIX = "/";
     final BotConfig botConfig;
+
+    final CommandContainer commandContainer;
 
     public TelegramBot(BotConfig botConfig) {
         this.botConfig = botConfig;
+        this.commandContainer = new CommandContainer(new SendMessageServiceImpl(this));
     }
 
     @Override
@@ -35,30 +41,12 @@ public class TelegramBot extends TelegramLongPollingBot {
             String originalMessage = update.getMessage().getText().trim();
             String chatId = update.getMessage().getChatId().toString();
 
-            switch (originalMessage) {
-                case "/start":
-                    startProcessMessage(chatId, update.getMessage().getChat().getFirstName());
-                    break;
-                default:
-                    sendMessage(chatId, "Sorry command was not recognised"); //TODO make it constant
+            if (originalMessage.startsWith(COMMAND_PREFIX)) {
+                String commandIdentifier = originalMessage.split(" ")[0].toLowerCase();
+                commandContainer.retrieveCommand(commandIdentifier).execute(update);
+            } else {
+                commandContainer.retrieveCommand(NO.getCommandName()).execute(update);
             }
-        }
-    }
-
-    private void startProcessMessage(String chatId, String firstName) {
-        String answer = String.format("Hi, %s, nice to meet you", firstName);
-        sendMessage(chatId, answer);
-    }
-
-    public void sendMessage(String chatId, String message) {
-        SendMessage response = new SendMessage();
-        response.setChatId(chatId);
-        response.setText(message);
-
-        try {
-            execute(response);
-        } catch (TelegramApiException executeException) {
-            log.error("Error appeared: " + executeException.getMessage());
         }
     }
 }
